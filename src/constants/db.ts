@@ -56,7 +56,7 @@ export const firebaseConfig = {
   appId,
   measurementId
 }
-
+export const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 export const SITEMAP_BASE_URL =
   projectId === "flim-prod"
     ? "https://app.flim.ai"

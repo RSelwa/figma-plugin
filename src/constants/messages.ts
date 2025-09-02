@@ -1,4 +1,7 @@
 export const FIGMA_MESSAGES = {
-  SET_TOKEN: "set-token",
-  GET_TOKEN: "get-token"
+  SET_ITEM: "setItem",
+  GET_ITEM: "getItem",
+  DELETE_ITEM: "deleteItem",
+  RESPONSE_USER: "RESPONSE_USER",
+  RESPONSE_TOKEN: "RESPONSE_TOKEN"
 }

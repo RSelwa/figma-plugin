@@ -1,4 +1,4 @@
-import { TOKEN_KEY } from "@/constants"
+import { FIGMA_MESSAGES } from "@/constants/messages"
 
 figma.showUI(__html__)
 
@@ -24,14 +24,31 @@ figma.ui.onmessage = async (msg) => {
     })
   }
 
-  if (msg.type === "set-token") {
-    console.log("Setting token in client storage:", msg.token)
+  if (msg.type === FIGMA_MESSAGES.SET_ITEM) {
+    console.log("msg.item", msg.item)
 
-    await figma.clientStorage.setAsync(TOKEN_KEY, msg.token)
+    await figma.clientStorage.setAsync(msg.itemKey, msg.item)
+
+    const storage = await figma.clientStorage.getAsync(msg.itemKey)
+
+    console.log("storageDDD", storage)
     return
   }
-  if (msg.type === "get-token") {
-    figma.clientStorage.getAsync(TOKEN_KEY)
+  if (msg.type === FIGMA_MESSAGES.GET_ITEM) {
+    const storage = await figma.clientStorage.getAsync(msg.itemKey)
+
+    // renvoyer à l'UI
+    figma.ui.postMessage({
+      type: msg.itemKey,
+      data: storage
+    })
+
+    return
+  }
+  if (msg.type === FIGMA_MESSAGES.DELETE_ITEM) {
+    console.log("DELETE_ITEM", msg.itemKey)
+
+    await figma.clientStorage.deleteAsync(msg.itemKey)
     return
   }
 

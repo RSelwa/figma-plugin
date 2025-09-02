@@ -1,9 +1,12 @@
+import Boards from "@/app/components/boards"
 import { Login } from "@/app/components/login"
-import "@/app/style.css"
+import { itemKey, useAuth } from "@/app/context/auth-context"
+import "@/app/style/style.css"
 import React, { useCallback, useEffect, useRef } from "react"
-import { TOKEN_KEY } from "@/constants"
+import { FIGMA_MESSAGES } from "@/constants/messages"
 
 function App() {
+  const { user } = useAuth()
   const textbox = useRef<HTMLInputElement>(undefined)
 
   const countRef = useCallback((element: HTMLInputElement) => {
@@ -34,26 +37,62 @@ function App() {
   }, [])
 
   return (
-    <div>
-      <h2 className="text-red-500">Rectangle Creator</h2>
-
-      <Login />
-      <p>
-        Count: <input ref={countRef} />
-      </p>
+    <main>
+      UID: {user?.uid}
       <button
+        className="bg-black text-white "
         onClick={async () => {
-          const token = window.localStorage.getItem(TOKEN_KEY)
-          console.log("Token from local storage:", token)
+          console.log("Clearing token from local storage UI")
+
+          await parent.postMessage(
+            {
+              pluginMessage: {
+                type: FIGMA_MESSAGES.DELETE_ITEM,
+                itemKey
+              }
+            },
+            "*"
+          )
         }}
       >
-        get token
+        Clear Token local
       </button>
-      <button id="create" onClick={onCreate}>
-        Create
+      <button
+        className="bg-primary-500 text-white px-4 py-2 rounded mb-4"
+        onClick={async () => {
+          await fetch("http://localhost:3001", { method: "POST" })
+            .then((res) => res.text())
+            .then((text) => console.log(text))
+        }}
+      >
+        TEST LOCAL
       </button>
-      <button onClick={onCancel}>Cancel</button>
-    </div>
+      {user ? (
+        <div>
+          <Boards />
+          <h2 className="text-primary-500">Rectangle Creator</h2>
+          <p>
+            Count: <input ref={countRef} />
+          </p>
+          <button
+            onClick={async () => {
+              const token = window.localStorage.getItem("")
+              console.log("Token from local storage:", token)
+            }}
+          >
+            get token
+          </button>
+          <button id="create" onClick={onCreate}>
+            Create
+          </button>
+          <button onClick={onCancel}>Cancel</button>
+        </div>
+      ) : (
+        <>
+          <Login />
+        </>
+      )}
+    </main>
   )
 }
 
