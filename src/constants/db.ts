@@ -1,35 +1,50 @@
-import { initializeApp } from 'firebase/app';
-import { connectAuthEmulator, getAuth } from 'firebase/auth';
-import { connectFirestoreEmulator, initializeFirestore } from 'firebase/firestore';
-import { connectFunctionsEmulator, getFunctions } from 'firebase/functions';
-import { connectStorageEmulator, getStorage } from 'firebase/storage';
+import { initializeApp } from "firebase/app"
+import { connectAuthEmulator, getAuth } from "firebase/auth"
+import {
+  connectFirestoreEmulator,
+  initializeFirestore
+} from "firebase/firestore"
+import { connectFunctionsEmulator, getFunctions } from "firebase/functions"
+import { connectStorageEmulator, getStorage } from "firebase/storage"
 
 // All process.env.* will be replaced at build time by dotenv-webpack
 const IS_TEST =
-  typeof process.env.NEXT_PUBLIC_APP_ENV !== 'undefined' ? process.env.NEXT_PUBLIC_APP_ENV === 'test' : false;
+  typeof process.env.NEXT_PUBLIC_APP_ENV !== "undefined"
+    ? process.env.NEXT_PUBLIC_APP_ENV === "test"
+    : false
 
 const apiKey =
-  typeof process.env.NEXT_PUBLIC_FBASE_API_KEY !== 'undefined' ? process.env.NEXT_PUBLIC_FBASE_API_KEY : '';
+  typeof process.env.NEXT_PUBLIC_FBASE_API_KEY !== "undefined"
+    ? process.env.NEXT_PUBLIC_FBASE_API_KEY
+    : ""
 const projectId =
-  typeof process.env.NEXT_PUBLIC_FBASE_PROJECT_ID !== 'undefined' ? process.env.NEXT_PUBLIC_FBASE_PROJECT_ID : '';
+  typeof process.env.NEXT_PUBLIC_FBASE_PROJECT_ID !== "undefined"
+    ? process.env.NEXT_PUBLIC_FBASE_PROJECT_ID
+    : ""
 const messagingSenderId =
-  typeof process.env.NEXT_PUBLIC_FBASE_MESSAGING_SENDER_ID !== 'undefined'
+  typeof process.env.NEXT_PUBLIC_FBASE_MESSAGING_SENDER_ID !== "undefined"
     ? process.env.NEXT_PUBLIC_FBASE_MESSAGING_SENDER_ID
-    : '';
-const appId = typeof process.env.NEXT_PUBLIC_FBASE_APP_ID !== 'undefined' ? process.env.NEXT_PUBLIC_FBASE_APP_ID : '';
+    : ""
+const appId =
+  typeof process.env.NEXT_PUBLIC_FBASE_APP_ID !== "undefined"
+    ? process.env.NEXT_PUBLIC_FBASE_APP_ID
+    : ""
 const measurementId =
-  typeof process.env.NEXT_PUBLIC_FBASE_MEASUREMENT_ID !== 'undefined'
+  typeof process.env.NEXT_PUBLIC_FBASE_MEASUREMENT_ID !== "undefined"
     ? process.env.NEXT_PUBLIC_FBASE_MEASUREMENT_ID
-    : '';
-export const isProd = projectId === 'flim-prod';
+    : ""
+export const isProd = projectId === "flim-prod"
 
 const getDbId = () => {
-  let databaseId = typeof process.env.TEST_WORKER_INDEX !== 'undefined' ? process.env.TEST_WORKER_INDEX : undefined;
+  let databaseId =
+    typeof process.env.TEST_WORKER_INDEX !== "undefined"
+      ? process.env.TEST_WORKER_INDEX
+      : undefined
   try {
-    databaseId = localStorage.getItem('databaseId') || databaseId;
+    databaseId = localStorage.getItem("databaseId") || databaseId
   } catch (error) {}
-  return databaseId;
-};
+  return databaseId
+}
 
 export const firebaseConfig = {
   apiKey,
@@ -39,52 +54,60 @@ export const firebaseConfig = {
   storageBucket: `${projectId}.appspot.com`,
   messagingSenderId,
   appId,
-  measurementId,
-};
+  measurementId
+}
 
 export const SITEMAP_BASE_URL =
-  projectId === 'flim-prod'
-    ? 'https://app.flim.ai'
-    : typeof process.env.NODE_ENV !== 'undefined' && process.env.NODE_ENV === 'development'
-    ? 'http://127.0.0.1:3000'
-    : 'https://dev.flim.ai';
+  projectId === "flim-prod"
+    ? "https://app.flim.ai"
+    : typeof process.env.NODE_ENV !== "undefined" &&
+      process.env.NODE_ENV === "development"
+    ? "http://127.0.0.1:3000"
+    : "https://dev.flim.ai"
 
-export const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const functions = getFunctions(app, 'europe-west3');
-export const storage = getStorage(app);
-export const db = initializeFirestore(app, { ignoreUndefinedProperties: true }, IS_TEST ? getDbId() : undefined);
+export const app = initializeApp(firebaseConfig)
+export const auth = getAuth(app)
+export const functions = getFunctions(app, "europe-west3")
+export const storage = getStorage(app)
+export const db = initializeFirestore(
+  app,
+  { ignoreUndefinedProperties: true },
+  IS_TEST ? getDbId() : undefined
+)
 
 if (IS_TEST) {
-  console.info(`%cEmulator: [STARTED], DB [${getDbId()}]`, 'color: red; font-weight: bold;');
-  connectFirestoreEmulator(db, '127.0.0.1', 8080);
-  connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
-  connectStorageEmulator(storage, '127.0.0.1', 9199);
+  console.info(
+    `%cEmulator: [STARTED], DB [${getDbId()}]`,
+    "color: red; font-weight: bold;"
+  )
+  connectFirestoreEmulator(db, "127.0.0.1", 8080)
+  connectAuthEmulator(auth, "http://127.0.0.1:9099", { disableWarnings: true })
+  connectStorageEmulator(storage, "127.0.0.1", 9199)
 }
 
 if (
-  typeof process.env.NEXT_PUBLIC_LOCAL_CLOUD_FUNCTIONS !== 'undefined' &&
-  process.env.NEXT_PUBLIC_LOCAL_CLOUD_FUNCTIONS === 'true'
+  typeof process.env.NEXT_PUBLIC_LOCAL_CLOUD_FUNCTIONS !== "undefined" &&
+  process.env.NEXT_PUBLIC_LOCAL_CLOUD_FUNCTIONS === "true"
 ) {
-  connectFunctionsEmulator(functions, '127.0.0.1', 5001);
+  connectFunctionsEmulator(functions, "127.0.0.1", 5001)
 }
 
 export const TABLES = {
-  USERS: 'usersv2',
-  INVITATIONS: 'invitations',
-  ORGANIZATIONS: 'organisations',
-  GEN_AI: 'user_genai',
-  BOARDS: 'user_boards',
-  SAVED: 'board_saved_images',
-  BOARD_IMAGES: 'user_boards/board_images',
-  BOARD_LIKES: 'user_boards/board_likes',
-  BOARD_VIEWS: 'user_boards/board_views',
-  BOARD_ORDERS: 'user_boards/board_orders',
-  BOARD_MODELS: 'user_boards/board_models',
-  STYLE_TRANSFER: 'user_genai',
-  PREFERENCES: 'usersv2/preferences',
-  TAGS: 'usersv2/tags',
-} as const;
+  USERS: "usersv2",
+  INVITATIONS: "invitations",
+  ORGANIZATIONS: "organisations",
+  GEN_AI: "user_genai",
+  BOARDS: "user_boards",
+  SAVED: "board_saved_images",
+  BOARD_IMAGES: "user_boards/board_images",
+  BOARD_LIKES: "user_boards/board_likes",
+  BOARD_VIEWS: "user_boards/board_views",
+  BOARD_ORDERS: "user_boards/board_orders",
+  BOARD_MODELS: "user_boards/board_models",
+  STYLE_TRANSFER: "user_genai",
+  PREFERENCES: "usersv2/preferences",
+  TAGS: "usersv2/tags"
+} as const
 
 // export const TABLE_REFS = {
 //   [TABLES.USERS]: collection(db, TABLES.USERS) as CustomCollectionRef<typeof TABLES.USERS>,
