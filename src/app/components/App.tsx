@@ -3,6 +3,7 @@ import { Login } from "@/app/components/login"
 import { itemKey, useAuth } from "@/app/context/auth-context"
 import "@/app/style/style.css"
 import React, { useCallback, useEffect, useRef } from "react"
+import { AUTH_VERIFY_URL } from "@/constants/db"
 import { FIGMA_MESSAGES } from "@/constants/messages"
 
 function App() {
@@ -60,7 +61,7 @@ function App() {
       <button
         className="bg-primary-500 text-white px-4 py-2 rounded mb-4"
         onClick={async () => {
-          await fetch("http://localhost:3001", { method: "POST" })
+          await fetch(AUTH_VERIFY_URL, { method: "POST" })
             .then((res) => res.text())
             .then((text) => console.log(text))
         }}

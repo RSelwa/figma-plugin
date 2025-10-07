@@ -109,6 +109,8 @@ export const TABLES = {
   TAGS: "usersv2/tags"
 } as const
 
+export const AUTH_VERIFY_URL = "http://localhost:3002"
+
 // export const TABLE_REFS = {
 //   [TABLES.USERS]: collection(db, TABLES.USERS) as CustomCollectionRef<typeof TABLES.USERS>,
 //   [TABLES.INVITATIONS]: collection(db, TABLES.INVITATIONS) as CustomCollectionRef<typeof TABLES.INVITATIONS>,

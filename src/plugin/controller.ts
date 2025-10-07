@@ -1,10 +1,11 @@
 import { FIGMA_MESSAGES } from "@/constants/messages"
+import { Message } from "../../schemas"
 
 figma.showUI(__html__)
 
-figma.ui.onmessage = async (msg) => {
-  if (msg.type === "create-rectangles") {
-    const nodes = []
+figma.ui.onmessage = async (msg: Message) => {
+  if (msg.type === FIGMA_MESSAGES.CREATE_RECTANGLES) {
+    const nodes: RectangleNode[] = []
 
     for (let i = 0; i < msg.count; i++) {
       const rect = figma.createRectangle()
@@ -25,15 +26,13 @@ figma.ui.onmessage = async (msg) => {
   }
 
   if (msg.type === FIGMA_MESSAGES.SET_ITEM) {
-    console.log("msg.item", msg.item)
-
     await figma.clientStorage.setAsync(msg.itemKey, msg.item)
 
-    const storage = await figma.clientStorage.getAsync(msg.itemKey)
+    await figma.clientStorage.getAsync(msg.itemKey)
 
-    console.log("storageDDD", storage)
     return
   }
+
   if (msg.type === FIGMA_MESSAGES.GET_ITEM) {
     const storage = await figma.clientStorage.getAsync(msg.itemKey)
 
@@ -45,9 +44,8 @@ figma.ui.onmessage = async (msg) => {
 
     return
   }
-  if (msg.type === FIGMA_MESSAGES.DELETE_ITEM) {
-    console.log("DELETE_ITEM", msg.itemKey)
 
+  if (msg.type === FIGMA_MESSAGES.DELETE_ITEM) {
     await figma.clientStorage.deleteAsync(msg.itemKey)
     return
   }

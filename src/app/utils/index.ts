@@ -1,16 +1,16 @@
 import { FIGMA_MESSAGES } from "@/constants/messages"
+import { Message } from "../../../schemas"
+
+export const postMessageToPlugin = (message: Message) => {
+  parent.postMessage({ pluginMessage: message }, "*")
+}
 
 export const stockItemInStorage = async (itemKey: string, item: any) => {
-  await parent.postMessage(
-    {
-      pluginMessage: {
-        type: FIGMA_MESSAGES.SET_ITEM,
-        item,
-        itemKey
-      }
-    },
-    "*"
-  )
+  await postMessageToPlugin({
+    type: FIGMA_MESSAGES.SET_ITEM,
+    item,
+    itemKey
+  })
 }
 
 export const retrieveItemFromStorage = async <T = any>(
@@ -28,21 +28,13 @@ export const retrieveItemFromStorage = async <T = any>(
 
     window.addEventListener("message", handleMessage)
 
-    parent.postMessage(
-      { pluginMessage: { type: FIGMA_MESSAGES.GET_ITEM, itemKey } },
-      "*"
-    )
+    postMessageToPlugin({ type: FIGMA_MESSAGES.GET_ITEM, itemKey })
   })
 }
 
 export const clearItemFromStorage = async (itemKey: string) => {
-  await parent.postMessage(
-    {
-      pluginMessage: {
-        type: FIGMA_MESSAGES.DELETE_ITEM,
-        itemKey
-      }
-    },
-    "*"
-  )
+  await postMessageToPlugin({
+    type: FIGMA_MESSAGES.DELETE_ITEM,
+    itemKey
+  })
 }

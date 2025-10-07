@@ -2,6 +2,5 @@ export const FIGMA_MESSAGES = {
   SET_ITEM: "setItem",
   GET_ITEM: "getItem",
   DELETE_ITEM: "deleteItem",
-  RESPONSE_USER: "RESPONSE_USER",
-  RESPONSE_TOKEN: "RESPONSE_TOKEN"
-}
+  CREATE_RECTANGLES: "create-rectangles"
+} as const
