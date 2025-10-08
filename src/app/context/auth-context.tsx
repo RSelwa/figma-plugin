@@ -21,18 +21,17 @@ const AuthContext = createContext<Context>({
 export const itemKey = "token"
 
 export const AuthProvider = ({ children }) => {
-  const [error, setError] = useState<string>("true")
+  const [error, setError] = useState<string>("")
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [user, setUser] = useState<User | null>(null)
 
   const init = async () => {
     try {
-      setError(null)
+      setIsLoading(true)
+      setError("")
       const token = await retrieveItemFromStorage<string>(itemKey)
 
-      console.log("token from storage", token?.split(" ").slice(-4).join("..."))
-
-      const headers = token ? { Authorization: `Bearer ${token}` } : {}
+      const headers = { Authorization: `Bearer ${token}` }
       const res = await fetch(AUTH_VERIFY_URL, {
         method: "POST",
         headers
@@ -42,7 +41,7 @@ export const AuthProvider = ({ children }) => {
 
       if (!res.ok || customToken.code === "auth/id-token-expired") {
         setError("Your session has expired, please login again")
-        await clearItemFromStorage(itemKey)
+        // await clearItemFromStorage(itemKey)
         setIsLoading(false)
       }
 
@@ -50,19 +49,19 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error("Error during auth initialization", error)
     }
+    setIsLoading(false)
     // 2️⃣ écouter les changements d’auth Firebase
     const unsubscribe = onAuthStateChanged(auth, async (u) => {
-      console.log("Auth state changed", u)
-
-      const token = await u?.getIdToken()
-      console.log("token from firebase auth", token)
-
       setUser(u)
 
       if (u) {
         const token = await u.getIdToken()
         await stockItemInStorage(itemKey, token)
+
+        return
       }
+
+      await clearItemFromStorage(itemKey)
     })
 
     // nettoyer l’abonnement au retour du useEffect

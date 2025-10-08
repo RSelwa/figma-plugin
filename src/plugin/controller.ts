@@ -1,7 +1,10 @@
 import { FIGMA_MESSAGES } from "@/constants/messages"
 import { Message } from "../../schemas"
 
-figma.showUI(__html__)
+figma.showUI(__html__, {
+  width: 500,
+  height: 700
+})
 
 figma.ui.onmessage = async (msg: Message) => {
   if (msg.type === FIGMA_MESSAGES.CREATE_RECTANGLES) {
@@ -23,6 +26,49 @@ figma.ui.onmessage = async (msg: Message) => {
       type: "create-rectangles",
       message: `Created ${msg.count} Rectangles`
     })
+  }
+
+  if (msg.type === FIGMA_MESSAGES.CREATE_IMAGE) {
+    const nodes: RectangleNode[] = []
+    const authorizedSelectionTypes = [
+      "RECTANGLE",
+      "ELLIPSE",
+      "POLYGON",
+      "STAR",
+      "VECTOR",
+      "PAGE",
+      "FRAME"
+    ]
+
+    const image = await figma.createImageAsync(msg.url)
+    const { width, height } = await image.getSizeAsync()
+    const firstSelection = figma.currentPage.selection[0]
+    const isSometingSelected =
+      figma.currentPage.selection.length > 0 &&
+      authorizedSelectionTypes.includes(firstSelection.type)
+
+    if (isSometingSelected) {
+      // @ts-ignore fix this later
+      firstSelection.fills = [
+        { type: "IMAGE", imageHash: image.hash, scaleMode: "FILL" }
+      ]
+      // @ts-ignore fix this later
+      nodes.push(firstSelection)
+    } else {
+      const rect = figma.createRectangle()
+      rect.resize(width, height)
+
+      rect.fills = [{ type: "IMAGE", imageHash: image.hash, scaleMode: "FILL" }]
+
+      figma.currentPage.appendChild(rect)
+      nodes.push(rect)
+
+      figma.currentPage.selection = nodes
+      figma.viewport.scrollAndZoomIntoView(nodes)
+    }
+    if (msg.closePlugin) figma.closePlugin()
+
+    return
   }
 
   if (msg.type === FIGMA_MESSAGES.SET_ITEM) {

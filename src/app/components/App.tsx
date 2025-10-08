@@ -1,31 +1,135 @@
-import Boards from "@/app/components/boards"
-import { Login } from "@/app/components/login"
-import { itemKey, useAuth } from "@/app/context/auth-context"
+import { Login, Logout } from "@/app/components/login"
+import { useAuth } from "@/app/context/auth-context"
 import "@/app/style/style.css"
-import React, { useCallback, useEffect, useRef } from "react"
-import { AUTH_VERIFY_URL } from "@/constants/db"
+import React, { useEffect, useState } from "react"
+import { AUTH_VERIFY_URL, baseUrl } from "@/constants/db"
+import { ImageType } from "@/constants/images"
 import { FIGMA_MESSAGES } from "@/constants/messages"
+import { postMessageToPlugin } from "@/app/utils"
 
 function App() {
-  const { user } = useAuth()
-  const textbox = useRef<HTMLInputElement>(undefined)
+  const { user, isLoading } = useAuth()
+  const [images, setImages] = useState<ImageType[]>([])
+  const [closePlugin, setClosePlugin] = useState(false)
+  const [search, setSearch] = useState("")
+  // const textbox = useRef<HTMLInputElement>(undefined)
 
-  const countRef = useCallback((element: HTMLInputElement) => {
-    if (element) element.value = "5"
-    textbox.current = element
-  }, [])
+  // const countRef = useCallback((element: HTMLInputElement) => {
+  //   if (element) element.value = "5"
+  //   textbox.current = element
+  // }, [])
 
-  const onCreate = () => {
-    const count = parseInt(textbox.current.value, 10)
-    parent.postMessage(
-      { pluginMessage: { type: "create-rectangles", count } },
-      "*"
-    )
+  const fetchDirectBack = async () => {
+    try {
+      console.log("Fetching direct back")
+      const token = await user?.getIdToken()
+
+      const body = {
+        search: {
+          saved_images: false,
+          full_text: search,
+          similar_picture_id: "",
+          movie_id: "",
+          dop: "",
+          director: "",
+          brand: "",
+          agency: "",
+          production_company: "",
+          actor: "",
+          creator: "",
+          artist: "",
+          collection_id: "",
+          board_id: "",
+          filters: {
+            genres: [],
+            colors: [],
+            number_of_persons: [],
+            years: [],
+            shot_types: [],
+            movie_types: [],
+            aspect_ratio: [],
+            safety_content: [],
+            has_video_cuts: false,
+            camera_motions: []
+          },
+          negative_filters: {
+            aspect_ratio: [],
+            genres: ["ANIMATION"],
+            movie_types: [],
+            colors: [],
+            shot_types: [],
+            number_of_persons: [],
+            years: [],
+            safety_content: ["nudity", "violence"]
+          }
+        },
+        page: 0,
+        sort_by: "",
+        order_by: "",
+        number_per_pages: 100
+      }
+
+      const response = await fetch(baseUrl + "/search", {
+        body: JSON.stringify(body),
+        method: "POST",
+        headers: {
+          authorization: `Bearer ${token}`,
+          "content-type": "application/json"
+        }
+      })
+
+      const data = await response.json()
+
+      if (data?.query_response?.images) setImages(data.query_response.images)
+    } catch (error) {
+      console.error(error)
+    }
   }
 
-  const onCancel = () => {
-    parent.postMessage({ pluginMessage: { type: "cancel" } }, "*")
+  const fetchImages = async () => {
+    try {
+      const token = await user?.getIdToken()
+
+      const response = await fetch(AUTH_VERIFY_URL + `/search?sq=${search}`, {
+        method: "GET",
+        headers: {
+          authorization: `Bearer ${token}`,
+          "content-type": "application/json"
+        }
+      })
+
+      const data = await response.json()
+
+      if (data?.query_response?.images) setImages(data.query_response.images)
+    } catch (error) {
+      console.error(error)
+    }
   }
+
+  // const onCreate = () => {
+  //   const count = parseInt(textbox.current?.value || "", 10)
+  //   parent.postMessage(
+  //     { pluginMessage: { type: "create-rectangles", count } },
+  //     "*"
+  //   )
+  // }
+
+  const createImage = async (url: string) => {
+    await postMessageToPlugin({
+      type: FIGMA_MESSAGES.CREATE_IMAGE,
+      url,
+      closePlugin
+    })
+  }
+
+  // const onCancel = () => {
+  //   //   postMessageToPlugin({ type: "cancel" })
+  // }
+
+  useEffect(() => {
+    fetchDirectBack()
+    fetchImages()
+  }, [user])
 
   useEffect(() => {
     // This is how we read messages sent from the plugin controller
@@ -37,62 +141,58 @@ function App() {
     }
   }, [])
 
-  return (
-    <main>
-      UID: {user?.uid}
-      <button
-        className="bg-black text-white "
-        onClick={async () => {
-          console.log("Clearing token from local storage UI")
+  if (isLoading) {
+    return <div>Loading...</div>
+  }
 
-          await parent.postMessage(
-            {
-              pluginMessage: {
-                type: FIGMA_MESSAGES.DELETE_ITEM,
-                itemKey
-              }
-            },
-            "*"
-          )
-        }}
-      >
-        Clear Token local
-      </button>
-      <button
-        className="bg-primary-500 text-white px-4 py-2 rounded mb-4"
-        onClick={async () => {
-          await fetch(AUTH_VERIFY_URL, { method: "POST" })
-            .then((res) => res.text())
-            .then((text) => console.log(text))
-        }}
-      >
-        TEST LOCAL
-      </button>
-      {user ? (
-        <div>
-          <Boards />
-          <h2 className="text-primary-500">Rectangle Creator</h2>
-          <p>
-            Count: <input ref={countRef} />
-          </p>
-          <button
-            onClick={async () => {
-              const token = window.localStorage.getItem("")
-              console.log("Token from local storage:", token)
-            }}
-          >
-            get token
-          </button>
-          <button id="create" onClick={onCreate}>
-            Create
-          </button>
-          <button onClick={onCancel}>Cancel</button>
+  if (!user) {
+    return <Login />
+  }
+
+  return (
+    <main className="p-4">
+      <section className="flex gap-4 items-center">
+        <Logout />
+        <span>
+          Close plugin after image insertion?
+          <label htmlFor="close-plugin"></label>
+          <input
+            type="checkbox"
+            onChange={() => setClosePlugin(!closePlugin)}
+            id="close-plugin"
+            name="close-plugin"
+          />
+        </span>
+      </section>
+
+      <section>
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault()
+            fetchImages()
+            fetchDirectBack()
+          }}
+        >
+          <input
+            type="search"
+            name="search"
+            onChange={(e) => setSearch(e.currentTarget.value)}
+            id=""
+          />
+          <button type="submit">Search</button>
+        </form>
+        <div className="grid grid-cols-2">
+          {images.map((img) => (
+            <img
+              key={img.id}
+              src={img.medium_resolution_url}
+              onClick={() => createImage(img.medium_resolution_url)}
+              alt="mock"
+              className=""
+            />
+          ))}
         </div>
-      ) : (
-        <>
-          <Login />
-        </>
-      )}
+      </section>
     </main>
   )
 }
